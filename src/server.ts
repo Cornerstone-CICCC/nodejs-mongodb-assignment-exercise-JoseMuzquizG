@@ -1,6 +1,7 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv'
+import productRouter from './routes/product.routes';
 dotenv.config()
 
 // Create server
@@ -9,10 +10,22 @@ const app = express();
 // Middleware
 app.use(express.json());
 
+// Routes
+app.use('/products', productRouter)
+
+// Fallback
+app.use((req: Request, res: Response) => {
+  res.status(404).send('Invalid route!')
+})
+
 // Connect to MongoDB and Start Server
 const PORT = process.env.PORT || 3000;
+if (!process.env.DATABASE_URI) {
+  throw Error("Missing connection string")
+}
+
 mongoose
-  .connect("mongodb+srv://<db_user>:<db_password>@ciccc.o8yo3tc.mongodb.net/<db_name>?retryWrites=true&w=majority&appName=<cluster_name>")
+  .connect(process.env.DATABASE_URI, {dbName: 'store'})
   .then(() => {
     console.log('Connected to MongoDB');
     app.listen(PORT, () => console.log(`Server is running on http://localhost:${PORT}`));
